@@ -4,7 +4,7 @@ from logger_config import setup_logger
 setup_logger()
 
 from fastapi.middleware.cors import CORSMiddleware
-#from routers import webSocket, roomsRouter
+from users import router as users_router
 from origins import origins
 import uvicorn
 
@@ -19,8 +19,8 @@ app.add_middleware(
     allow_headers = ['*'],
     allow_credentials = True
 )
-#app.state.games_manager = gamesManager()
-#app.include_router(webSocket.ws_router)
+
+app.include_router(users_router.router)
 
 
 
