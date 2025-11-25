@@ -1,6 +1,12 @@
+import sys
+from os.path import dirname, abspath
+sys.path.insert(0, dirname(dirname(abspath(__file__))))
+
+from config import get_db_url
+
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, declared_attr
-from config import get_db_url
+
 
 
 DATABASE_URL = get_db_url()

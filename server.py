@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 
-from logger_config import setup_logger
+from app.logger_config import setup_logger
 setup_logger()
 
 from fastapi.middleware.cors import CORSMiddleware
-from users import router as users_router
-from origins import origins
+from app.users import router as users_router
+from app.origins import origins
 import uvicorn
 
 

@@ -6,7 +6,6 @@ sys.path.insert(0, dirname(dirname(abspath(__file__))))
 from database import DATABASE_URL, Base
 from models import User
 
-
 import asyncio
 from logging.config import fileConfig
 
