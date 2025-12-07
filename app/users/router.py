@@ -1,15 +1,15 @@
-from sqlalchemy import select
-
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBearer
 
 from logging import getLogger
 
 from .schemas import NewUser, LoginUser
 from .dao import UserDAO
 
+from ..alembic.database import async_session_maker
 from ..utils.security import get_password_hash, verify_password
-from ..utils.JWT import create_access_token, get_user_from_access_token
+from ..utils.JWT import create_access_token
 
 
 
@@ -21,30 +21,38 @@ http_bearer = HTTPBearer()
 
 @router.post("/registration")
 async def user_registration(new_user: NewUser):
-    double_user = await UserDAO.find_one_by_filter(name=new_user.name)
+    async with async_session_maker() as session:
+        user_dao = UserDAO(session)
 
-    if double_user:
-        logger.info(f'{new_user.name} уже есть в базе данных')
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Пользователь уже существует"
-        )
-    
-    dict_new_user = new_user.model_dump()
-    dict_new_user['password'] = get_password_hash(dict_new_user['password'])
+        async with session.begin():
+            double_user = await user_dao.find_one_by_filter(name=new_user.name)
+            if double_user:
+                logger.info(f'{new_user.name} уже есть в базе данных')
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Пользователь уже существует"
+                )
+            
+            dict_new_user = new_user.model_dump()
+            dict_new_user['password'] = get_password_hash(dict_new_user['password'])
 
-    user = await UserDAO.add(dict_new_user)
+            user = await UserDAO.add(dict_new_user)
         
     logger.info(f'{new_user.name} был добавлен')
     
-    return {
+    return JSONResponse(content = {
             'access_token': create_access_token({'user_id':str(user.id)}),
             'token_type': 'bearer'
-        }
+        },
+        status_code=status.HTTP_201_CREATED)
 
 @router.post("/login")
 async def user_login(login_user: LoginUser):
-    user = await UserDAO.find_one_by_filter(name=login_user.name)
+    async with async_session_maker() as session:
+        user_dao = UserDAO(session)
+
+        async with session.begin():
+            user = await user_dao.find_one_by_filter(name=login_user.name)
 
     if not user:
         logger.info(f'{login_user.name} отсутствует в базе данных')
@@ -63,13 +71,8 @@ async def user_login(login_user: LoginUser):
     logger.info(f'{login_user.name} вошел в систему') 
 
     return {
-        'access_token': create_access_token({'user_id':str(user.id)}),
-        'token_type': 'bearer'
-    }
+            'access_token': create_access_token({'user_id':str(user.id)}),
+            'token_type': 'bearer'
+        }
 
 
-@router.post("/check")
-async def jwt_check(credentials: HTTPAuthorizationCredentials = Depends(http_bearer)):
-    token = credentials.credentials
-    user = await get_user_from_access_token(token)
-    return {"your_id": user.id}

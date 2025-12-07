@@ -21,7 +21,7 @@ def create_access_token(data: dict) -> str:
     encode_jwt = jwt.encode(to_encode, auth_data['secret_key'], algorithm=auth_data['algorithm'])
     return encode_jwt
 
-async def get_user_from_access_token(token: str) -> User:
+async def get_user_from_access_token(token: str, user_dao: UserDAO) -> User:
     try:
         auth_data = get_auth_data()
         data = jwt.decode(token, auth_data['secret_key'], algorithms=[auth_data['algorithm']])
@@ -51,7 +51,7 @@ async def get_user_from_access_token(token: str) -> User:
             detail='Токен истек'
             )
 
-    user = await UserDAO.find_one_by_filter(id=int(user_id))
+    user = await user_dao.find_one_by_filter(id=int(user_id))
 
     if not user:
         logger.info(f'Пользователь не найден (id = {user_id})')

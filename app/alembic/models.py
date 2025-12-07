@@ -40,6 +40,8 @@ class Lost_report(Base):
 
     description: Mapped[str] = mapped_column(Text, nullable=False)
     photo_url: Mapped[str] = mapped_column(String(1000), nullable=False)
+    latitude: Mapped[float] = mapped_column(nullable=False)
+    longitude: Mapped[float] = mapped_column(nullable=False)
 
     registered: Mapped[date] = mapped_column()
 
@@ -52,6 +54,9 @@ class Found_report(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     photo_url: Mapped[str] = mapped_column(String(1000), nullable=False)
     
+    latitude: Mapped[float] = mapped_column(nullable=False)
+    longitude: Mapped[float] = mapped_column(nullable=False)
+
     registered: Mapped[date] = mapped_column()
 
 
